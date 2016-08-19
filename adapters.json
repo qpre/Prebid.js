@@ -25,6 +25,7 @@
     "jcm",
     "underdogmedia",
     "memeglobal",
+    "criteo",
     {
       "appnexus": {
         "alias": "brealtime"
