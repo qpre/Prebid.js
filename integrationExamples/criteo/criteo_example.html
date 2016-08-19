@@ -1,7 +1,6 @@
 <html>
     <head>
-        <script type="text/javascript" src="publishertag.js"></script> <!-- load publishertag synchronously to avoid loading it asyncrhonously in prebid using the prod version -->
-        <script type="text/javascript" src="prebid.js" async></script> <!-- copy prebid.js and prebid.js.map in the folder of this html file. Can be build from https://github.com/prebid/Prebid.js.git -->
+        <script type="text/javascript" src="/build/dev/prebid.js" async></script>
     </head>
     <body>
         <div id="container">Bid Response</div>
@@ -11,11 +10,11 @@
 
             pbjs.que.push(function() {
                 var adUnits = [{
-                    code: 'div-gpt-ad-1438287399331-0',
+                    code: 'myimpID12',
                     sizes: [[300, 250], [300, 600]],
                     bids: [{
                         bidder: 'criteo',
-                        params: { zoneid: '280017' }
+                        params: { zoneid: '280017', audit: 'true' }
                     }
                     // Add other bidders here
                     ]

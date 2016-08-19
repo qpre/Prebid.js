@@ -31,6 +31,8 @@ var CriteoAdapter = function CriteoAdapter() {
 
     var slots = [];
 
+    var isAudit = false;
+
     // build slots before sendind one multi-slots bid request
     for (var i = 0; i < bids.length; i++) {
       var bid = bids[i];
@@ -40,12 +42,14 @@ var CriteoAdapter = function CriteoAdapter() {
           bid.params.zoneid
         )
       );
+
+      isAudit |= bid.params.audit !== undefined;
     }
 
     // generate the bidding event
     var biddingEvent = new Criteo.PubTag.DirectBidding.DirectBiddingEvent(
       _profileId,
-      new Criteo.PubTag.DirectBidding.DirectBiddingUrlBuilder(),
+      new Criteo.PubTag.DirectBidding.DirectBiddingUrlBuilder(isAudit),
       slots,
       _callbackSuccess(slots),
       _callbackError(slots),
@@ -66,7 +70,7 @@ var CriteoAdapter = function CriteoAdapter() {
 
         // look for the matching bid response
         for(var j = 0; j < jsonbidsResponse.slots.length; j++) {
-          if (jsonbidsResponse.slots[j] && jsonbidsResponse.slots[j].impid === slots[i].ImpId) {
+          if (jsonbidsResponse.slots[j] && jsonbidsResponse.slots[j].impid === slots[i].impId) {
             bidResponse = jsonbidsResponse.slots[j];
             break;
           }
