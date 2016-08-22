@@ -38,7 +38,7 @@ var CriteoAdapter = function CriteoAdapter() {
       var bid = bids[i];
       slots.push(
         new Criteo.PubTag.DirectBidding.DirectBiddingSlot(
-          bid.placementCode,
+          bid.adUnitCode,
           bid.params.zoneid
         )
       );
@@ -56,7 +56,7 @@ var CriteoAdapter = function CriteoAdapter() {
       _callbackError(slots) // timeout handled as error
     );
 
-    // if we want to be fully asynchrone, we must first check window.criteo_pubtag in case publishertag.js is not loaded yet.
+    // if we want to be fully asynchronous, we must first check window.criteo_pubtag in case publishertag.js is not loaded yet.
     window.criteo_pubtag = window.criteo_pubtag || [];
     // process the event as soon as possible
     window.criteo_pubtag.push(biddingEvent);
