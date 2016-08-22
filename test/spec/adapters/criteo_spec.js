@@ -18,7 +18,7 @@ describe('criteo adapter test', () => {
             sizes: [[250, 350]],
             params: {
                 zoneid: 'bar',
-                audit: 'true' 
+                audit: 'true'
             }
           }
         ]
