@@ -62,9 +62,25 @@ var CriteoAdapter = function CriteoAdapter() {
     window.criteo_pubtag.push(biddingEvent);
   }
 
+  function parseBidResponse(bidsResponse) {
+      try {
+        return JSON.parse(bidsResponse);
+      }
+      catch(error) {
+        return {};
+      }
+  }
+
+  function isRtbNoBidResponse(jsonbidsResponse) {
+    return jsonbidsResponse.slots == undefined;
+  }
+
   function _callbackSuccess(slots) {
     return function (bidsResponse) {
-      var jsonbidsResponse = JSON.parse(bidsResponse);
+      var jsonbidsResponse = parseBidResponse(bidsResponse);
+
+      if (isRtbNoBidResponse(jsonbidsResponse))
+        return _callbackError(slots)();
 
       for(var i = 0; i < slots.length; i++) {
         var bidResponse = null;
@@ -90,7 +106,7 @@ var CriteoAdapter = function CriteoAdapter() {
         else {
           bidObject = _invalidBidResponse();
         }
-        bidmanager.addBidResponse(slots[i].impid, bidObject);
+        bidmanager.addBidResponse(slots[i].impId, bidObject);
       }
     };
   }
