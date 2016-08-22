@@ -38,7 +38,7 @@ var CriteoAdapter = function CriteoAdapter() {
       var bid = bids[i];
       slots.push(
         new Criteo.PubTag.DirectBidding.DirectBiddingSlot(
-          bid.adUnitCode,
+          bid.placementCode,
           bid.params.zoneid
         )
       );
@@ -65,6 +65,7 @@ var CriteoAdapter = function CriteoAdapter() {
   function _callbackSuccess(slots) {
     return function (bidsResponse) {
       var jsonbidsResponse = JSON.parse(bidsResponse);
+
       for(var i = 0; i < slots.length; i++) {
         var bidResponse = null;
 

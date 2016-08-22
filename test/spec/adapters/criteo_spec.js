@@ -14,7 +14,7 @@ describe('criteo adapter test', () => {
         bids: [
           {
             bidder: 'criteo',
-            adUnitCode: 'foo',
+            code: 'foo',
             sizes: [[250, 350]],
             params: {
                 zoneid: 'bar',
@@ -36,7 +36,7 @@ describe('criteo adapter test', () => {
 
     it('adds bid for valid request', (done) => {
       stubAddBidResponse = sinon.stub(bidManager, 'addBidResponse', function (adUnitCode, bid) {
-          expect(bid).to.satisfy(bid => { return bid.getStatusCode() == 1; })
+          expect(bid).to.satisfy(bid => { return bid.getStatusCode() == 1; }) // Status 1 = Bid available
           done();
       });
 
