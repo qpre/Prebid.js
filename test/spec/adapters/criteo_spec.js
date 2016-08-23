@@ -4,6 +4,8 @@ import Adapter from '../../../src/adapters/criteo';
 import bidManager from '../../../src/bidmanager';
 import {expect} from 'chai';
 
+var CONSTANTS = require('../../../src/constants');
+
 describe('criteo adapter test', () => {
 
   let adapter;
@@ -17,7 +19,33 @@ describe('criteo adapter test', () => {
             placementCode: 'foo',
             sizes: [[250, 350]],
             params: {
-                zoneid: 'bar',
+                zoneid: 32934,
+                audit: 'true'
+            }
+          }
+        ]
+   };
+
+  let invalidResponse = { slots: [{ "impid": "unknownSlot" }] }
+
+  let validMultiBid = {
+        bidderCode: 'criteo',
+        bids: [
+          {
+            bidder: 'criteo',
+            placementCode: 'foo',
+            sizes: [[250, 350]],
+            params: {
+                zoneid: 32934,
+                audit: 'true'
+            }
+          },
+          {
+            bidder: 'criteo',
+            placementCode: 'bar',
+            sizes: [[250, 350]],
+            params: {
+                zoneid: 32935,
                 audit: 'true'
             }
           }
@@ -32,15 +60,27 @@ describe('criteo adapter test', () => {
     stubAddBidResponse.restore();
   });
 
-  describe('adding bids to the manager', () => {
+describe('adding bids to the manager', () => {
 
     it('adds bid for valid request', (done) => {
       stubAddBidResponse = sinon.stub(bidManager, 'addBidResponse', function (adUnitCode, bid) {
-          expect(bid).to.satisfy(bid => { return bid.getStatusCode() == 1; }) // Status 1 = Bid available
+          expect(bid).to.satisfy(bid => { return bid.getStatusCode() == CONSTANTS.STATUS.GOOD });
           done();
       });
 
       adapter.callBids(validBid);
+    });
+
+    it('adds bid for multibid valid request', (done) => {
+      let callCount = 0;
+      stubAddBidResponse = sinon.stub(bidManager, 'addBidResponse', function (adUnitCode, bid) {
+          callCount++;
+
+          if (callCount == 2)
+            done();
+      });
+
+      adapter.callBids(validMultiBid);
     });
 
     it('adds bidderCode to the response of a valid request', (done) => {
@@ -65,6 +105,58 @@ describe('criteo adapter test', () => {
         expect(bid).to.have.property('ad', '<html><h3>I am an ad</h3></html>');
         done();
       });
+      adapter.callBids(validBid);
+    });
+});
+
+  describe('dealing with unexpected situations', () => {
+    let server;
+
+    beforeEach(() => {
+      server = sinon.fakeServer.create({autoRespond: true, respondImmediately: true});
+    });
+
+    it('no bid if cdb handler responds with no bid empty string response', (done) => {
+      server.respondWith("");
+
+      stubAddBidResponse = sinon.stub(bidManager, 'addBidResponse', function (adUnitCode, bid) {
+          expect(bid).to.satisfy(bid => { return bid.getStatusCode() == CONSTANTS.STATUS.NO_BID });
+          done();
+      });
+
+      adapter.callBids(validBid);
+    });
+
+    it('no bid if cdb handler responds with no bid empty object response', (done) => {
+      server.respondWith("{ }");
+
+      stubAddBidResponse = sinon.stub(bidManager, 'addBidResponse', function (adUnitCode, bid) {
+          expect(bid).to.satisfy(bid => { return bid.getStatusCode() == CONSTANTS.STATUS.NO_BID });
+          done();
+      });
+
+      adapter.callBids(validBid);
+    });
+
+    it('no bid if cdb handler responds with HTTP error', (done) => {
+      server.respondWith([500, {}, "Internal Server Error"]);
+
+      stubAddBidResponse = sinon.stub(bidManager, 'addBidResponse', function (adUnitCode, bid) {
+          expect(bid).to.satisfy(bid => { return bid.getStatusCode() == CONSTANTS.STATUS.NO_BID });
+          done();
+      });
+
+      adapter.callBids(validBid);
+    });
+
+    it('no bid if response is invalid because response slots don\'t match input slots', (done) => {
+      server.respondWith(JSON.stringify(invalidResponse));
+
+      stubAddBidResponse = sinon.stub(bidManager, 'addBidResponse', function (adUnitCode, bid) {
+          expect(bid).to.satisfy(bid => { return bid.getStatusCode() == CONSTANTS.STATUS.NO_BID });
+          done();
+      });
+
       adapter.callBids(validBid);
     });
   });
