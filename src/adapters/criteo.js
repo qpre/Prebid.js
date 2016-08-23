@@ -63,16 +63,16 @@ var CriteoAdapter = function CriteoAdapter() {
   }
 
   function parseBidResponse(bidsResponse) {
-      try {
-        return JSON.parse(bidsResponse);
-      }
-      catch(error) {
-        return {};
-      }
+    try {
+      return JSON.parse(bidsResponse);
+    }
+    catch(error) {
+      return {};
+    }
   }
 
   function isNoBidResponse(jsonbidsResponse) {
-    return jsonbidsResponse.slots == undefined;
+    return jsonbidsResponse.slots === undefined;
   }
 
   function _callbackSuccess(slots) {

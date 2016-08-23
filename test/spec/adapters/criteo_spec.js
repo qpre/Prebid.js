@@ -14,7 +14,7 @@ describe('criteo adapter test', () => {
         bids: [
           {
             bidder: 'criteo',
-            code: 'foo',
+            placementCode: 'foo',
             sizes: [[250, 350]],
             params: {
                 zoneid: 'bar',
