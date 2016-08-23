@@ -33,7 +33,7 @@ var CriteoAdapter = function CriteoAdapter() {
 
     var isAudit = false;
 
-    // build slots before sendind one multi-slots bid request
+    // build slots before sending one multi-slots bid request
     for (var i = 0; i < bids.length; i++) {
       var bid = bids[i];
       slots.push(
@@ -71,7 +71,7 @@ var CriteoAdapter = function CriteoAdapter() {
       }
   }
 
-  function isRtbNoBidResponse(jsonbidsResponse) {
+  function isNoBidResponse(jsonbidsResponse) {
     return jsonbidsResponse.slots == undefined;
   }
 
@@ -79,7 +79,7 @@ var CriteoAdapter = function CriteoAdapter() {
     return function (bidsResponse) {
       var jsonbidsResponse = parseBidResponse(bidsResponse);
 
-      if (isRtbNoBidResponse(jsonbidsResponse))
+      if (isNoBidResponse(jsonbidsResponse))
         return _callbackError(slots)();
 
       for(var i = 0; i < slots.length; i++) {
