@@ -6,7 +6,6 @@
     "aol",
     "appnexus",
     "appnexusAst",
-    "fan",
     "indexExchange",
     "kruxlink",
     "openx",
@@ -26,6 +25,7 @@
     "underdogmedia",
     "memeglobal",
     "criteo",
+    "centro",
     {
       "appnexus": {
         "alias": "brealtime"
