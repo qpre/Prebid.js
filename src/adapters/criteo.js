@@ -76,12 +76,12 @@ var CriteoAdapter = function CriteoAdapter() {
   }
 
   function parseWidth(bidResponse) {
-    var rx = /width='([0-9]*)'/g;
+    var rx = /width=['"]([0-9]*)['"]/g;
     var arr = rx.exec(bidResponse.creative);
     return parseInt(arr[1]);
   }
   function parseHeight(bidResponse) {
-    var rx = /height='([0-9]*)'/g;
+    var rx = /height=['"]([0-9]*)['"]/g;
     var arr = rx.exec(bidResponse.creative);
     return parseInt(arr[1]);
   }

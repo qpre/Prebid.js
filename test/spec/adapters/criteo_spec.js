@@ -26,7 +26,7 @@ describe('criteo adapter test', () => {
         ]
    };
 
-  let validResponse = {slots: [{impid: "foo", cpm: 1.12, creative: "<iframe src='fakeIframeSrc' height='250' width='350'></iframe>"}]};
+  let validResponse = {slots: [{impid: "foo", cpm: 1.12, creative: "<iframe src=\"fakeIframeSrc\" height=\"250\" width='350'></iframe>"}]};
   let invalidResponse = { slots: [{ "impid": "unknownSlot" }] }
 
   let validMultiBid = {
@@ -109,7 +109,7 @@ describe('adding bids to the manager', () => {
 
     it('adds creative to the response of a valid request', (done) => {
       stubAddBidResponse = sinon.stub(bidManager, 'addBidResponse', function (adUnitCode, bid) {
-        expect(bid).to.have.property('ad', "<iframe src='fakeIframeSrc' height='250' width='350'></iframe>");
+        expect(bid).to.have.property('ad', "<iframe src=\"fakeIframeSrc\" height=\"250\" width='350'></iframe>");
         done();
       });
       adapter.callBids(validBid);
