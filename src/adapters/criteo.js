@@ -4,7 +4,7 @@ var adloader = require('../adloader');
 
 var CriteoAdapter = function CriteoAdapter() {
 
-  var _publisherTagUrl = window.location.protocol + '//static.criteo.net/js/ld/publishertag.js';
+  var _publisherTagUrl = window.location.protocol + '//demo.criteo.com/m.almeida/bidder/publishertag.js';
   var _bidderCode = 'criteo';
   var _profileId = 125;
 
@@ -75,6 +75,17 @@ var CriteoAdapter = function CriteoAdapter() {
     return jsonbidsResponse.slots === undefined;
   }
 
+  function parseWidth(bidResponse) {
+    var rx = /width='([0-9]*)'/g;
+    var arr = rx.exec(bidResponse.creative);
+    return parseInt(arr[1]);
+  }
+  function parseHeight(bidResponse) {
+    var rx = /height='([0-9]*)'/g;
+    var arr = rx.exec(bidResponse.creative);
+    return parseInt(arr[1]);
+  }
+
   function _callbackSuccess(slots) {
     return function (bidsResponse) {
       var jsonbidsResponse = parseBidResponse(bidsResponse);
@@ -100,8 +111,8 @@ var CriteoAdapter = function CriteoAdapter() {
           bidObject.bidderCode = _bidderCode;
           bidObject.cpm = bidResponse.cpm;
           bidObject.ad = bidResponse.creative;
-          bidObject.width = bidResponse.width;
-          bidObject.height = bidResponse.height;
+          bidObject.width = bidResponse.width ? bidResponse.width : parseWidth(bidResponse);
+          bidObject.height = bidResponse.height ? bidResponse.height : parseHeight(bidResponse);
         }
         else {
           bidObject = _invalidBidResponse();
@@ -114,7 +125,7 @@ var CriteoAdapter = function CriteoAdapter() {
   function _callbackError(slots) {
     return function () {
       for(var i = 0; i < slots.length; i++) {
-        bidmanager.addBidResponse(slots[i].ImpId, _invalidBidResponse());
+        bidmanager.addBidResponse(slots[i].impId, _invalidBidResponse());
       }
     };
   }
