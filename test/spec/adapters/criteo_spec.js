@@ -26,6 +26,7 @@ describe('criteo adapter test', () => {
         ]
    };
 
+  let validResponse = {slots: [{impid: "foo", cpm: 1.12, creative: "<iframe src='fakeIframeSrc' height='250' width='350'></iframe>"}]};
   let invalidResponse = { slots: [{ "impid": "unknownSlot" }] }
 
   let validMultiBid = {
@@ -61,6 +62,12 @@ describe('criteo adapter test', () => {
   });
 
 describe('adding bids to the manager', () => {
+    let server;
+
+    beforeEach(() => {
+      server = sinon.fakeServer.create({autoRespond: true, respondImmediately: true});
+      server.respondWith(JSON.stringify(validResponse));
+    });
 
     it('adds bid for valid request', (done) => {
       stubAddBidResponse = sinon.stub(bidManager, 'addBidResponse', function (adUnitCode, bid) {
@@ -102,14 +109,14 @@ describe('adding bids to the manager', () => {
 
     it('adds creative to the response of a valid request', (done) => {
       stubAddBidResponse = sinon.stub(bidManager, 'addBidResponse', function (adUnitCode, bid) {
-        expect(bid).to.have.property('ad', '<html><h3>I am an ad</h3></html>');
+        expect(bid).to.have.property('ad', "<iframe src='fakeIframeSrc' height='250' width='350'></iframe>");
         done();
       });
       adapter.callBids(validBid);
     });
 });
 
-  describe('dealing with unexpected situations', () => {
+describe('dealing with unexpected situations', () => {
     let server;
 
     beforeEach(() => {
