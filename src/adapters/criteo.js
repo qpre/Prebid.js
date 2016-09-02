@@ -4,7 +4,7 @@ var adloader = require('../adloader');
 
 var CriteoAdapter = function CriteoAdapter() {
 
-  var _publisherTagUrl = window.location.protocol + '//demo.criteo.com/m.almeida/bidder/publishertag.js';
+  var _publisherTagUrl = window.location.protocol + '//static.criteo.net/js/ld/publishertag.js';
   var _bidderCode = 'criteo';
   var _profileId = 125;
 
