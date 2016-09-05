@@ -19,7 +19,7 @@ describe('criteo adapter test', () => {
             placementCode: 'foo',
             sizes: [[250, 350]],
             params: {
-                zoneid: 32934,
+                zoneId: 32934,
                 audit: 'true'
             }
           }
@@ -37,7 +37,7 @@ describe('criteo adapter test', () => {
             placementCode: 'foo',
             sizes: [[250, 350]],
             params: {
-                zoneid: 32934,
+                zoneId: 32934,
                 audit: 'true'
             }
           },
@@ -46,7 +46,7 @@ describe('criteo adapter test', () => {
             placementCode: 'bar',
             sizes: [[250, 350]],
             params: {
-                zoneid: 32935,
+                zoneId: 32935,
                 audit: 'true'
             }
           }
