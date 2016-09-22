@@ -11,62 +11,71 @@ var CriteoAdapter = function CriteoAdapter() {
   function _callBids(params) {
     if (!window.criteo_pubtag || window.criteo_pubtag instanceof Array) {
       // publisherTag not loaded yet
+
+      _pushBidRequestEvent(params);
       adloader.loadScript(
         _publisherTagUrl,
-        function () {
-          _sendBidRequest(params);
-        },
+        function () {},
         true
       );
     }
     else {
       // publisherTag already loaded
-      _sendBidRequest(params);
+      _pushBidRequestEvent(params);
     }
   }
 
   // send bid request to criteo direct bidder handler
-  function _sendBidRequest(params) {
-    var bids = params.bids || [];
-
-    var slots = [];
-
-    var isAudit = false;
-
-    // build slots before sending one multi-slots bid request
-    for (var i = 0; i < bids.length; i++) {
-      var bid = bids[i];
-      slots.push(
-        new Criteo.PubTag.DirectBidding.DirectBiddingSlot(
-          bid.placementCode,
-          bid.params.zoneId
-        )
-      );
-
-      isAudit |= bid.params.audit !== undefined;
-    }
-
-    // generate the bidding event
-    var biddingEvent = new Criteo.PubTag.DirectBidding.DirectBiddingEvent(
-      _profileId,
-      new Criteo.PubTag.DirectBidding.DirectBiddingUrlBuilder(isAudit),
-      slots,
-      _callbackSuccess(slots),
-      _callbackError(slots),
-      _callbackError(slots) // timeout handled as error
-    );
+  function _pushBidRequestEvent(params) {
 
     // if we want to be fully asynchronous, we must first check window.criteo_pubtag in case publishertag.js is not loaded yet.
-    window.criteo_pubtag = window.criteo_pubtag || [];
-    // process the event as soon as possible
-    window.criteo_pubtag.push(biddingEvent);
+    window.Criteo = window.Criteo || {};
+    window.Criteo.events = window.Criteo.events || [];
+
+    // generate the bidding event
+    var biddingEventFunc = function () {
+
+      var bids = params.bids || [];
+
+      var slots = [];
+
+      var isAudit = false;
+
+      // build slots before sending one multi-slots bid request
+      for (var i = 0; i < bids.length; i++) {
+        var bid = bids[i];
+        slots.push(
+          new Criteo.PubTag.DirectBidding.DirectBiddingSlot(
+            bid.placementCode,
+            bid.params.zoneId
+          )
+        );
+
+        isAudit |= bid.params.audit !== undefined;
+      }
+
+      var biddingEvent = new Criteo.PubTag.DirectBidding.DirectBiddingEvent(
+        _profileId,
+        new Criteo.PubTag.DirectBidding.DirectBiddingUrlBuilder(isAudit),
+        slots,
+        _callbackSuccess(slots),
+        _callbackError(slots),
+        _callbackError(slots) // timeout handled as error
+      );
+
+      // process the event as soon as possible
+      window.criteo_pubtag.push(biddingEvent);
+    };
+
+    window.Criteo.events.push(biddingEventFunc);
+    
   }
 
   function parseBidResponse(bidsResponse) {
     try {
       return JSON.parse(bidsResponse);
     }
-    catch(error) {
+    catch (error) {
       return {};
     }
   }
@@ -93,11 +102,11 @@ var CriteoAdapter = function CriteoAdapter() {
       if (isNoBidResponse(jsonbidsResponse))
         return _callbackError(slots)();
 
-      for(var i = 0; i < slots.length; i++) {
+      for (var i = 0; i < slots.length; i++) {
         var bidResponse = null;
 
         // look for the matching bid response
-        for(var j = 0; j < jsonbidsResponse.slots.length; j++) {
+        for (var j = 0; j < jsonbidsResponse.slots.length; j++) {
           if (jsonbidsResponse.slots[j] && jsonbidsResponse.slots[j].impid === slots[i].impId) {
             bidResponse = jsonbidsResponse.slots[j];
             break;
@@ -124,7 +133,7 @@ var CriteoAdapter = function CriteoAdapter() {
 
   function _callbackError(slots) {
     return function () {
-      for(var i = 0; i < slots.length; i++) {
+      for (var i = 0; i < slots.length; i++) {
         bidmanager.addBidResponse(slots[i].impId, _invalidBidResponse());
       }
     };
