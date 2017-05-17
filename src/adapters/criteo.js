@@ -3,6 +3,7 @@ var bidmanager = require('../bidmanager.js');
 var adloader = require('../adloader');
 
 var CriteoAdapter = function CriteoAdapter() {
+
   var _publisherTagUrl = window.location.protocol + '//static.criteo.net/js/ld/publishertag.js';
   var _bidderCode = 'criteo';
   var _profileId = 125;
@@ -14,10 +15,11 @@ var CriteoAdapter = function CriteoAdapter() {
       _pushBidRequestEvent(params);
       adloader.loadScript(
         _publisherTagUrl,
-        function () {},
+        function () { },
         true
       );
-    } else {
+    }
+    else {
       // publisherTag already loaded
       _pushBidRequestEvent(params);
     }
@@ -25,29 +27,33 @@ var CriteoAdapter = function CriteoAdapter() {
 
   // send bid request to criteo direct bidder handler
   function _pushBidRequestEvent(params) {
+
     // if we want to be fully asynchronous, we must first check window.criteo_pubtag in case publishertag.js is not loaded yet.
     window.Criteo = window.Criteo || {};
     window.Criteo.events = window.Criteo.events || [];
 
     // generate the bidding event
     var biddingEventFunc = function () {
+
       var bids = params.bids || [];
 
       var slots = [];
 
       var isAudit = false;
+      var slotsBidArray = [];
 
       // build slots before sending one multi-slots bid request
       for (var i = 0; i < bids.length; i++) {
         var bid = bids[i];
-        slots.push(
-          new Criteo.PubTag.DirectBidding.DirectBiddingSlot(
-            bid.placementCode,
-            bid.params.zoneId,
-            undefined,
-            bid.transactionId
-          )
-        );
+        var directBiddingSlot = new Criteo.PubTag.DirectBidding.DirectBiddingSlot(
+          bid.placementCode,
+          bid.params.zoneId,
+          undefined,
+          bid.transactionId
+        )
+
+        slots.push(directBiddingSlot);
+        slotsBidArray.push({slot: directBiddingSlot, bid: bid})
 
         isAudit |= bid.params.audit !== undefined;
       }
@@ -56,7 +62,7 @@ var CriteoAdapter = function CriteoAdapter() {
         _profileId,
         new Criteo.PubTag.DirectBidding.DirectBiddingUrlBuilder(isAudit),
         slots,
-        _callbackSuccess(slots),
+        _callbackSuccess(slotsBidArray),
         _callbackError(slots),
         _callbackError(slots) // timeout handled as error
       );
@@ -66,12 +72,14 @@ var CriteoAdapter = function CriteoAdapter() {
     };
 
     window.Criteo.events.push(biddingEventFunc);
+
   }
 
   function parseBidResponse(bidsResponse) {
     try {
       return JSON.parse(bidsResponse);
-    } catch (error) {
+    }
+    catch (error) {
       return {};
     }
   }
@@ -80,18 +88,22 @@ var CriteoAdapter = function CriteoAdapter() {
     return jsonbidsResponse.slots === undefined;
   }
 
-  function _callbackSuccess(slots) {
+  function _callbackSuccess(slotsBidArray) {
     return function (bidsResponse) {
       var jsonbidsResponse = parseBidResponse(bidsResponse);
 
-      if (isNoBidResponse(jsonbidsResponse)) { return _callbackError(slots)(); }
+      if (isNoBidResponse(jsonbidsResponse))
+        return _callbackError(slotsBidArray)();
 
-      for (var i = 0; i < slots.length; i++) {
+      for (var i = 0; i < slotsBidArray.length; i++) {
         var bidResponse = null;
+
+        var directBiddingSlot = slotsBidArray[i].slot;
+        var bidRequest = slotsBidArray[i].bid;
 
         // look for the matching bid response
         for (var j = 0; j < jsonbidsResponse.slots.length; j++) {
-          if (jsonbidsResponse.slots[j] && jsonbidsResponse.slots[j].impid === slots[i].impId) {
+          if (jsonbidsResponse.slots[j] && jsonbidsResponse.slots[j].impid === directBiddingSlot.impId) {
             bidResponse = jsonbidsResponse.slots.splice(j, 1)[0];
             break;
           }
@@ -100,16 +112,17 @@ var CriteoAdapter = function CriteoAdapter() {
         // register the bid response
         var bidObject;
         if (bidResponse) {
-          bidObject = bidfactory.createBid(1);
+          bidObject = bidfactory.createBid(1, bidRequest);
           bidObject.bidderCode = _bidderCode;
           bidObject.cpm = bidResponse.cpm;
           bidObject.ad = bidResponse.creative;
           bidObject.width = bidResponse.width;
           bidObject.height = bidResponse.height;
-        } else {
+        }
+        else {
           bidObject = _invalidBidResponse();
         }
-        bidmanager.addBidResponse(slots[i].impId, bidObject);
+        bidmanager.addBidResponse(directBiddingSlot.impId, bidObject);
       }
     };
   }
