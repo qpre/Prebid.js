@@ -6,7 +6,7 @@ var utils = require('src/utils');
 
 var CriteoAdapter = function CriteoAdapter() {
   var sProt = (window.location.protocol === 'http:') ? 'http:' : 'https:';
-  var _publisherTagUrl = sProt + '//static.criteo.net/js/ld/publishertag.js';
+  var _publisherTagUrl = sProt + '//static.criteo.net/js/ld/publishertag.prebid.js';
   var _bidderCode = 'criteo';
   var _profileId = 125;
 
@@ -15,14 +15,27 @@ var CriteoAdapter = function CriteoAdapter() {
       // publisherTag not loaded yet
 
       _pushBidRequestEvent(params);
-      adloader.loadScript(
-        _publisherTagUrl,
-        function () { },
-        true
-      );
+      var criteoFastBid = _tryGetCriteoFastBid();
+      if (criteoFastBid) {
+        eval(criteoFastBid);
+      } else {
+        adloader.loadScript(
+          _publisherTagUrl,
+          function () { },
+          false
+        );
+      }
     } else {
       // publisherTag already loaded
       _pushBidRequestEvent(params);
+    }
+  }
+
+  function _tryGetCriteoFastBid() {
+    try {
+      return localStorage.getItem('criteo_fast_bid');
+    } catch (e) {
+      return null;
     }
   }
 
