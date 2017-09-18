@@ -7,7 +7,7 @@ var adaptermanager = require('src/adaptermanager');
 var CriteoAdapter = function CriteoAdapter() {
   var _bidderCode = 'criteo';
   var _cdb_endPoint = "//bidder.criteo.com/cdb";
-  var _profileId = 125;
+  var _profileId = 207;
 
   function _callBids(params) {
     var url = _buildCDBUrl();
