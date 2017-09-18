@@ -98,14 +98,14 @@ var CriteoAdapter = function CriteoAdapter() {
 
         var bidObject;
         if (bidResponse) {
-          bidObject = bidfactory.createBid(1);
+          bidObject = bidfactory.createBid(1, requestBid);
           bidObject.bidderCode = _bidderCode;
           bidObject.cpm = bidResponse.cpm;
           bidObject.ad = bidResponse.creative;
           bidObject.width = bidResponse.width;
           bidObject.height = bidResponse.height;
         } else {
-          bidObject = _invalidBidResponse();
+          bidObject = _invalidBidResponse(requestBid);
         }
         bidmanager.addBidResponse(requestSlot.impid, bidObject);
 
@@ -113,16 +113,18 @@ var CriteoAdapter = function CriteoAdapter() {
     };
   }
 
-  function _callbackError(slots) {
+  function _callbackError(requestSlotsBidMapping) {
     return function () {
-      for (var i = 0; i < slots.length; i++) {
-        bidmanager.addBidResponse(slots[i].impId, _invalidBidResponse());
-      }
+      requestSlotsBidMapping.forEach((bidMapping) => {
+        var requestSlot = bidMapping.slot;
+        var requestBid = bidMapping.bid;
+        bidmanager.addBidResponse(requestSlot.impid, _invalidBidResponse(requestBid));
+      });
     };
   }
 
-  function _invalidBidResponse() {
-    var bidObject = bidfactory.createBid(2);
+  function _invalidBidResponse(requestBid) {
+    var bidObject = bidfactory.createBid(2, requestBid);
     bidObject.bidderCode = _bidderCode;
     return bidObject;
   }
