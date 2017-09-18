@@ -1,12 +1,11 @@
-var bidfactory = require('../bidfactory.js');
-var bidmanager = require('../bidmanager.js');
-var adloader = require('../adloader');
-var ajaxHelper = require('../ajax.js');
+var bidfactory = require('src/bidfactory.js');
+var bidmanager = require('src/bidmanager.js');
+var ajaxHelper = require('src/ajax.js');
 var adaptermanager = require('src/adaptermanager');
 
 var CriteoAdapter = function CriteoAdapter() {
   var _bidderCode = 'criteo';
-  var _cdb_endPoint = "//bidder.criteo.com/cdb";
+  var _cdb_endPoint = '//bidder.criteo.com/cdb';
   var _profileId = 207;
 
   function _callBids(params) {
@@ -16,8 +15,8 @@ var CriteoAdapter = function CriteoAdapter() {
     var stringifiedData = JSON.stringify(dataWrapper.data);
 
     var xhrOptions = {
-      metthod: "POST",
-      contentType: "application/x-www-form-urlencoded",
+      metthod: 'POST',
+      contentType: 'application/x-www-form-urlencoded',
       withCredentials: true
     }
 
@@ -25,9 +24,9 @@ var CriteoAdapter = function CriteoAdapter() {
   }
 
   function _buildCDBUrl() {
-    var protocol = location.protocol === "https:" ? "https:" : "http:";
-    var profileId = "?profileId=" + _profileId;
-    var cb = "&cb=" + String(_generateCacheBuster());
+    var protocol = location.protocol === 'https:' ? 'https:' : 'http:';
+    var profileId = '?profileId=' + _profileId;
+    var cb = '&cb=' + String(_generateCacheBuster());
 
     var url = protocol + _cdb_endPoint + profileId + cb;
     return url;
@@ -35,7 +34,7 @@ var CriteoAdapter = function CriteoAdapter() {
 
   function _buildCDBData(params) {
     var publisher = {
-      "url": location.href
+      'url': location.href
     }
 
     var slots = [];
@@ -85,7 +84,6 @@ var CriteoAdapter = function CriteoAdapter() {
       if (isNoBidResponse(jsonbidsResponse)) { return _callbackError(requestSlotsBidMapping)(); }
 
       requestSlotsBidMapping.forEach((requestSlotBidMapping) => {
-
         var bidResponse = null;
         var requestSlot = requestSlotBidMapping.slot;
         var requestBid = requestSlotBidMapping.bid;
@@ -108,7 +106,6 @@ var CriteoAdapter = function CriteoAdapter() {
           bidObject = _invalidBidResponse(requestBid);
         }
         bidmanager.addBidResponse(requestSlot.impid, bidObject);
-
       });
     };
   }
