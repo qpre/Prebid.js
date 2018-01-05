@@ -2,6 +2,8 @@ import { Renderer } from 'src/Renderer';
 import * as utils from 'src/utils';
 import { registerBidder } from 'src/adapters/bidderFactory';
 import { NATIVE, VIDEO } from 'src/mediaTypes';
+import find from 'core-js/library/fn/array/find';
+import includes from 'core-js/library/fn/array/includes';
 
 const BIDDER_CODE = 'appnexus';
 const URL = '//ib.adnxs.com/ut/v3/prebid';
@@ -49,16 +51,16 @@ export const spec = {
    */
   buildRequests: function(bidRequests, bidderRequest) {
     const tags = bidRequests.map(bidToTag);
-    const userObjBid = bidRequests.find(hasUserInfo);
+    const userObjBid = find(bidRequests, hasUserInfo);
     let userObj;
     if (userObjBid) {
       userObj = {};
       Object.keys(userObjBid.params.user)
-        .filter(param => USER_PARAMS.includes(param))
+        .filter(param => includes(USER_PARAMS, param))
         .forEach(param => userObj[param] = userObjBid.params.user[param]);
     }
 
-    const memberIdBid = bidRequests.find(hasMemberId);
+    const memberIdBid = find(bidRequests, hasMemberId);
     const member = memberIdBid ? parseInt(memberIdBid.params.member, 10) : 0;
 
     const payload = {
@@ -101,7 +103,7 @@ export const spec = {
       serverResponse.tags.forEach(serverBid => {
         const rtbBid = getRtbBid(serverBid);
         if (rtbBid) {
-          if (rtbBid.cpm !== 0 && SUPPORTED_AD_TYPES.includes(rtbBid.ad_type)) {
+          if (rtbBid.cpm !== 0 && includes(SUPPORTED_AD_TYPES, rtbBid.ad_type)) {
             const bid = newBid(serverBid, rtbBid);
             bid.mediaType = parseMediaType(rtbBid);
             bids.push(bid);
@@ -214,8 +216,16 @@ function newBid(serverBid, rtbBid) {
       body: nativeAd.desc,
       cta: nativeAd.ctatext,
       sponsoredBy: nativeAd.sponsored,
-      image: nativeAd.main_img && nativeAd.main_img.url,
-      icon: nativeAd.icon && nativeAd.icon.url,
+      image: {
+        url: nativeAd.main_img && nativeAd.main_img.url,
+        height: nativeAd.main_img && nativeAd.main_img.height,
+        width: nativeAd.main_img && nativeAd.main_img.width,
+      },
+      icon: {
+        url: nativeAd.icon && nativeAd.icon.url,
+        height: nativeAd.icon && nativeAd.icon.height,
+        width: nativeAd.icon && nativeAd.icon.width,
+      },
       clickUrl: nativeAd.link.url,
       clickTrackers: nativeAd.link.click_trackers,
       impressionTrackers: nativeAd.impression_trackers,
@@ -300,7 +310,7 @@ function bidToTag(bid) {
     tag.video = {};
     // place any valid video params on the tag
     Object.keys(bid.params.video)
-      .filter(param => VIDEO_TARGETING.includes(param))
+      .filter(param => includes(VIDEO_TARGETING, param))
       .forEach(param => tag.video[param] = bid.params.video[param]);
   }
 
@@ -339,7 +349,7 @@ function hasMemberId(bid) {
 }
 
 function getRtbBid(tag) {
-  return tag && tag.ads && tag.ads.length && tag.ads.find(ad => ad.rtb);
+  return tag && tag.ads && tag.ads.length && find(tag.ads, ad => ad.rtb);
 }
 
 function buildNativeRequest(params) {
@@ -368,7 +378,7 @@ function buildNativeRequest(params) {
       // subtract required keys from adunit keys
       const adunitKeys = Object.keys(params[key]);
       const requiredKeys = Object.keys(requiredParams);
-      const remaining = adunitKeys.filter(key => !requiredKeys.includes(key));
+      const remaining = adunitKeys.filter(key => !includes(requiredKeys, key));
 
       // if none are left over, the minimum params needs to be sent
       if (remaining.length === 0) {

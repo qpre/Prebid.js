@@ -8,6 +8,7 @@ import adaptermanager from 'src/adaptermanager';
 import { config } from 'src/config';
 import { VIDEO } from 'src/mediaTypes';
 import { isValid } from 'src/adapters/bidderFactory';
+import includes from 'core-js/library/fn/array/includes';
 
 const getConfig = config.getConfig;
 
@@ -35,6 +36,7 @@ config.setDefaults({
  * @property {string} endpoint endpoint to contact
  *  === optional params below ===
  * @property {number} [timeout] timeout for S2S bidders - should be lower than `pbjs.requestBids({timeout})`
+ * @property {boolean} [cacheMarkup] whether to cache the adm result
  * @property {string} [adapter] adapter code to use for S2S
  * @property {string} [syncEndpoint] endpoint URL for syncing cookies
  * @property {string} [cookieSetUrl] url for cookie set library, if passed then cookieSet is enabled
@@ -43,7 +45,7 @@ function setS2sConfig(options) {
   let keys = Object.keys(options);
 
   if (['accountId', 'bidders', 'endpoint'].filter(key => {
-    if (!keys.includes(key)) {
+    if (!includes(keys, key)) {
       utils.logError(key + ' missing in server to server config');
       return true;
     }
@@ -209,6 +211,7 @@ export function PrebidServer() {
       max_bids: _s2sConfig.maxBids,
       timeout_millis: _s2sConfig.timeout,
       secure: _s2sConfig.secure,
+      cache_markup: _s2sConfig.cacheMarkup,
       url: utils.getTopWindowUrl(),
       prebid_version: '$prebid.version$',
       ad_units: adUnits.filter(hasSizes),
@@ -271,6 +274,12 @@ export function PrebidServer() {
             bidObject.creative_id = bidObj.creative_id;
             bidObject.bidderCode = bidObj.bidder;
             bidObject.cpm = cpm;
+            if (bidObj.cache_id) {
+              bidObject.cache_id = bidObj.cache_id;
+            }
+            if (bidObj.cache_url) {
+              bidObject.cache_url = bidObj.cache_url;
+            }
             // From ORTB see section 4.2.3: adm Optional means of conveying ad markup in case the bid wins; supersedes the win notice if markup is included in both.
             if (bidObj.media_type === VIDEO) {
               bidObject.mediaType = VIDEO;
@@ -319,7 +328,7 @@ export function PrebidServer() {
       utils.logError(error);
     }
 
-    if (!result || (result.status && result.status.includes('Error'))) {
+    if (!result || (result.status && includes(result.status, 'Error'))) {
       utils.logError('error parsing response: ', result.status);
     }
 

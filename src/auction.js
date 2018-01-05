@@ -57,6 +57,8 @@ import { config } from 'src/config';
 import { userSync } from 'src/userSync';
 import { createHook } from 'src/hook';
 import { videoAdUnit } from 'src/video';
+import find from 'core-js/library/fn/array/find';
+import includes from 'core-js/library/fn/array/includes';
 
 const { syncUsers } = userSync;
 const utils = require('./utils');
@@ -147,12 +149,12 @@ export function newAuction({adUnits, adUnitCodes, callback, cbTimeout, labels}) 
   function done(bidRequestId) {
     var innerBidRequestId = bidRequestId;
     return delayExecution(function() {
-      let request = _bidderRequests.find((bidRequest) => {
+      let request = find(_bidderRequests, (bidRequest) => {
         return innerBidRequestId === bidRequest.bidderRequestId;
       });
       request.doneCbCallCount += 1;
       // In case of mediaType video and prebidCache enabled, call bidsBackHandler after cache is stored.
-      if ((request.bids.filter(videoAdUnit).length == 0) || (request.bids.filter(videoAdUnit).length > 0 && !config.getConfig('usePrebidCache'))) {
+      if ((request.bids.filter(videoAdUnit).length == 0) || (request.bids.filter(videoAdUnit).length > 0 && !config.getConfig('cache.url'))) {
         bidsBackAll()
       }
     }, 1);
@@ -236,7 +238,7 @@ export const addBidResponse = createHook('asyncSeries', function(adUnitCode, bid
 
   // Video bids may fail if the cache is down, or there's trouble on the network.
   function tryAddVideoBid(bidResponse) {
-    if (config.getConfig('usePrebidCache')) {
+    if (config.getConfig('cache.url')) {
       store([bidResponse], function(error, cacheIds) {
         if (error) {
           utils.logWarn(`Failed to save to the video cache: ${error}. Video bid must be discarded.`);
@@ -488,10 +490,10 @@ function getTimedOutBids(bidderRequests, bidsReceived) {
     .filter(uniques);
 
   const timedOutBidderCodes = bidRequestedCodes
-    .filter(bidder => !bidReceivedCodes.includes(bidder));
+    .filter(bidder => !includes(bidReceivedCodes, bidder));
 
   const timedOutBids = bidderRequests
-    .map(bid => (bid.bids || []).filter(bid => timedOutBidderCodes.includes(bid.bidder)))
+    .map(bid => (bid.bids || []).filter(bid => includes(timedOutBidderCodes, bid.bidder)))
     .reduce(flatten, [])
     .map(bid => ({
       bidId: bid.bidId,
