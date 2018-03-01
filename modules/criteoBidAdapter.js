@@ -1,6 +1,7 @@
 import { loadScript } from 'src/adloader';
 import { registerBidder } from 'src/adapters/bidderFactory';
-import { EVENTS } from 'src/constants';
+import bidfactory from 'src/bidfactory';
+import { EVENTS, STATUS } from 'src/constants';
 import { parse } from 'src/url';
 import * as utils from 'src/utils';
 
@@ -80,6 +81,7 @@ export const spec = {
     }
 
     const bids = [];
+    const treatedSlots = [];
 
     if (body && body.slots && utils.isArray(body.slots)) {
       body.slots.forEach(slot => {
@@ -101,12 +103,39 @@ export const spec = {
           bid.ad = slot.creative;
         }
         bids.push(bid);
+        treatedSlots.push(slot.impid);
       });
     }
+
+    // Add missing bids as "no bid" bids (required to trigger analytics events)
+    request.bidRequests
+      .filter(b => treatedSlots.indexOf(b.adUnitCode) === -1)
+      .forEach(bidRequest => {
+        bids.push(createNoBid(bidRequest));
+      });
 
     return bids;
   },
 };
+
+/**
+ * @param {BidRequest} bidRequest
+ * @return {Bid}
+ */
+function createNoBid(bidRequest) {
+  const bid = {
+    requestId: bidRequest.bidId,
+    cpm: 0,
+    width: 0,
+    height: 0,
+    ad: '',
+    ttl: 0,
+    creativeId: bidRequest.bidId,
+    netRevenue: true,
+    currency: 'EUR',
+  }
+  return Object.assign(bidfactory.createBid(STATUS.NO_BID, bidRequest), bid);
+}
 
 /**
  * @return {boolean}
